@@ -3,8 +3,7 @@ const mongoose = require("mongoose");
 const readline = require("readline");
 
 // Connection URL and Database Name
-const MONGODB_ATLAS_URI = "mongodb+srv://fjbanezares:Pepito123@cluster0.n87gd.mongodb.net/comparisonDB?retryWrites=true&w=majority";
-
+const MONGODB_ATLAS_URI = process.env.MONGODB_URI;
 // 1. DEFINING A SCHEMA
 const movieSchema = new mongoose.Schema({
     title: {

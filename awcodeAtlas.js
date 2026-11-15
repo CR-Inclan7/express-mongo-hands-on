@@ -1,3 +1,4 @@
+require('dotenv').config();
 //jshint esversion:8
 
 // Import necessary NPM modules required for the application
@@ -18,11 +19,10 @@ app.use(express.static("public"));
 
 // Connect to a MongoDB database named todolistDB with a deprecation fix for the URL parser
 //mongoose.connect("mongodb://localhost:27017/todolistDB", { useNewUrlParser: true });
-//const MONGODB_ATLAS_URI = "mongodb+srv://fjbanezares:Pepito123@cluster0.h5kauwo.mongodb.net/?retryWrites=true&w=majority"
 
 
 
-const MONGODB_ATLAS_URI = "mongodb+srv://fjbanezares:Pepito123@cluster0.n87gd.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0";
+const MONGODB_ATLAS_URI = process.env.MONGODB_URI;
 mongoose.connect(MONGODB_ATLAS_URI, { useNewUrlParser: true, useUnifiedTopology: true });
 
 
@@ -62,7 +62,17 @@ app.get("/", async (req, res) => {
             res.redirect("/");
         } else {
             // If items are found, render the 'list' EJS template with the found items
-            res.render("list", { listTitle: "Today", newListItems: foundItems });
+            const listasMongo = await List.find({}, "name").lean();
+            const allLists = [
+                { name: "Today" },
+                ...listasMongo.filter(lista => lista.name !== "Today")
+            ];
+
+            res.render("list", {
+                listTitle: "Today",
+                newListItems: foundItems,
+                allLists: allLists
+            });
         }
     } catch (err) {
         // Log any errors and send a server error response
@@ -73,6 +83,10 @@ app.get("/", async (req, res) => {
 
 // Handle GET requests for custom list names. This allows users to create and view custom lists
 // async is the "promise" this anonymous function will use asynchroniciy
+// Evitar que el navegador cree una lista llamada Favicon.ico
+app.get("/favicon.ico", (req, res) => {
+    res.status(204).end();
+});
 app.get("/:customListName", async (req, res) => {
     // Capitalize the custom list name to maintain consistent naming convention
     const customListName = _.capitalize(req.params.customListName);
@@ -90,7 +104,17 @@ app.get("/:customListName", async (req, res) => {
             res.redirect("/" + customListName);
         } else {
             // If the list exists, render it with its items
-            res.render("list", { listTitle: foundList.name, newListItems: foundList.items });
+            const listasMongo = await List.find({}, "name").lean();
+            const allLists = [
+                { name: "Today" },
+                ...listasMongo.filter(lista => lista.name !== "Today")
+            ];
+
+            res.render("list", {
+                listTitle: foundList.name,
+                newListItems: foundList.items,
+                allLists: allLists
+            });
         }
     } catch (err) {
         // Log any errors and send a server error response
